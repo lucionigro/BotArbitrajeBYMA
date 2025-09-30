@@ -1,11 +1,13 @@
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Primary;
 using Primary.Data;
+using System.Configuration;
+using System.Globalization;
 using System.Media;
 using System.Net;
 using System.Text;
-using Microsoft.Extensions.Configuration;
-using System.Configuration;
 
 namespace BOTArbitradorPorPlazo
 {
@@ -18,6 +20,8 @@ namespace BOTArbitradorPorPlazo
         const string prefijoPrimary= "MERV - XMEV - ";
         const string sufijoCI = " - CI";
         const string sufijo24 = " - 24hs";
+        const int HorarioApertura = 1035;
+        const int HorarioCierre = 1655;
 
 
         string tokenVETA;
@@ -46,8 +50,8 @@ namespace BOTArbitradorPorPlazo
                         
             DoubleBuffered = true;
             CheckForIllegalCrossThreadCalls = false;
-            umbralAcciones = 0.32;  //Establecer los umbrales de acuerdo a la comisi�n de cada uno.
-            umbralBonos = 0.12;
+            umbralAcciones = 0.50;  //Establecer los umbrales de acuerdo a la comisión de cada uno.
+            umbralBonos = 0.50;
 
             tickersIOL = new List<string>();
             tickers = new List<Ticker>();
@@ -78,6 +82,9 @@ namespace BOTArbitradorPorPlazo
             {
 
             }
+
+            if (cboUmbral.Items.Count > 0 && cboUmbral.SelectedIndex < 0)
+                cboUmbral.SelectedIndex = 0;
         }
 
 
@@ -497,6 +504,67 @@ namespace BOTArbitradorPorPlazo
         }
 
 
+        private async Task<string> Comprar(string simbolo, string cantidad, string precio)
+        {
+            if (!int.TryParse(cantidad, out var qty) || qty <= 0)
+            {
+                ToLog("Error de cantidad: " + cantidad);
+                return "Error";
+            }
+            if (!double.TryParse(precio, NumberStyles.Any, CultureInfo.InvariantCulture, out var px))
+            {
+                ToLog("Error de precio: " + precio);
+                return "Error";
+            }
+
+            ToLog($"Comprando {qty} {simbolo} a {px.ToString(CultureInfo.InvariantCulture)}");
+            await Task.Run(() => Application.DoEvents());
+
+            string validez = DateTime.Today.ToString("yyyy-MM-dd") + "T17:59:59.000Z";
+
+            var order = new
+            {
+                mercado = "bCBA",
+                simbolo = simbolo,
+                cantidad = qty,
+                precio = px,
+                plazo = "t0",
+                validez = validez
+            };
+
+            string postDataJson = JsonConvert.SerializeObject(order);
+
+            // intento 1
+            string response = GetResponsePOST(sURL + "/api/v2/operar/Comprar", postDataJson);
+
+            // si expiró el token, refresco y reintento 1 vez
+            if (response.Contains("401") || response.Contains("Unauthorized"))
+            {
+                ToLog("401 en Comprar → renovando token IOL y reintentando...");
+                LoginIOL();
+                response = GetResponsePOST(sURL + "/api/v2/operar/Comprar", postDataJson);
+            }
+
+            try
+            {
+                dynamic json = JObject.Parse(response);
+                string okStr = json.ok != null ? json.ok.ToString() : "true";
+                if (okStr.Equals("false", StringComparison.OrdinalIgnoreCase))
+                {
+                    ToLog(response);
+                    return "Error";
+                }
+                string operacion = json.numeroOperacion;
+                return operacion ?? "Error";
+            }
+            catch
+            {
+                ToLog(response);
+                return "Error";
+            }
+        }
+
+
         private void FillListaTickers()
         {
             foreach (string tickerIOL in tickersIOL)
@@ -679,7 +747,7 @@ namespace BOTArbitradorPorPlazo
                 }
                 else
                 {
-                    ToLog("Venci� la compra de " + simbolo);
+                    ToLog("Venció la compra de " + simbolo);
                     WebRequest request = WebRequest.Create(sURL + "/api/v2/operaciones/" + operacionCompra);
                     request.Method = "DELETE";
                     request.ContentType = "application/json";
@@ -702,81 +770,173 @@ namespace BOTArbitradorPorPlazo
         }
         private string GetEstadoOperacion(string idoperacion)
         {
-            string response;
-            response = GetResponseGET(sURL + "/api/v2/operaciones/" + idoperacion, bearer);
-            if (response.Contains("Error") || response.Contains("Se exced"))
+            string url = sURL + "/api/v2/operaciones/" + idoperacion;
+
+            string response = GetResponseGET(url, bearer);
+
+            // Si expiró el token, refresco y reintento 1 vez
+            if (EsUnauthorized(response))
             {
-                return "Error";
+                ToLog("401 en GetEstadoOperacion → renovando token IOL y reintentando...");
+                LoginIOL();
+                response = GetResponseGET(url, bearer);
             }
-            else
+
+            try
             {
                 dynamic json = JObject.Parse(response);
-                return json.estadoActual.Value;
+
+                // Algunos responses traen "estadoActual", otros "estado"
+                string estado =
+                    (string)(json.estadoActual != null ? json.estadoActual :
+                             json.estado != null ? json.estado :
+                             "");
+
+                if (string.IsNullOrWhiteSpace(estado))
+                    return "Error";
+
+                return estado.Trim().ToLowerInvariant(); // ej: "terminada", "pendiente", etc.
+            }
+            catch
+            {
+                // Mensajes de error comunes sin JSON válido
+                if (response.IndexOf("404", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    response.IndexOf("no existe", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return "noencontrada";
+                }
+
+                ToLog(response);
+                return "Error";
             }
         }
 
-        private async Task<string> Comprar(string simbolo, string cantidad, string precio)
+        private bool EsUnauthorized(string s) =>
+            !string.IsNullOrEmpty(s) &&
+            (s.Contains("401") || s.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0);
+
+        private string Vender(string simbolo, string cantidad, string precio)
         {
-            if (int.Parse(cantidad)>0)
-            {
-                ToLog("Comprando " + cantidad + " " + simbolo + " a " + precio);
-                await Task.Run(() => Application.DoEvents());
-                string validez = DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "T17:59:59.000Z";
-                string postData = "mercado=bCBA&simbolo=" + simbolo + "&cantidad=" + cantidad + "&precio=" + precio + "&validez=" + validez + "&plazo=t0";
-                string response;
-                response = GetResponsePOST(sURL + "/api/v2/operar/Comprar", postData);
-                if (response.Contains("Error") || response.Contains("Se exced") || response.Contains("No se puede"))
-                {
-                    ToLog(response);
-                    return "Error";
-                }
-                else
-                {   try
-                    {
-                        dynamic json = JObject.Parse(response);
-                        string operacion = json.numeroOperacion;
-                        if (json.ok == "false")
-                        {
-                            return "Error";
-                        }
-                        else
-                        {
-                            return operacion;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        ToLog(response);
-                        return "Error";
-                    }
-                }
-            }
-            else
+            if (!int.TryParse(cantidad, out var qty) || qty <= 0)
             {
                 ToLog("Error de cantidad: " + cantidad);
                 return "Error";
             }
-        }
-
-        private string Vender(string simbolo, string cantidad, string precio)
-        {
-            ToLog("Vendiendo " + cantidad + " " + simbolo + " a " + precio);
-            Application.DoEvents();
-            string validez = DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "T17:59:59.000Z";
-            string postData = "mercado=bCBA&simbolo=" + simbolo + "&cantidad=" + cantidad + "&precio=" + precio + "&validez=" + validez + "&plazo=t1";
-            string response;
-            response = GetResponsePOST(sURL + "/api/v2/operar/Vender", postData);
-            dynamic json = JObject.Parse(response);
-            string operacion = json.numeroOperacion;
-            if (json.ok == "false")
+            if (!double.TryParse(precio, NumberStyles.Any, CultureInfo.InvariantCulture, out var px))
             {
+                ToLog("Error de precio: " + precio);
                 return "Error";
             }
-            else
+
+            ToLog($"Vendiendo {qty} {simbolo} a {px.ToString(CultureInfo.InvariantCulture)}");
+            Application.DoEvents();
+
+            string validez = DateTime.Today.ToString("yyyy-MM-dd") + "T17:59:59.000Z";
+
+            var order = new
             {
-                return operacion;
+                mercado = "bCBA",
+                simbolo = simbolo,
+                cantidad = qty,
+                precio = px,
+                plazo = "t1",
+                validez = validez
+            };
+
+            string postDataJson = JsonConvert.SerializeObject(order);
+
+            // intento 1
+            string response = GetResponsePOST(sURL + "/api/v2/operar/Vender", postDataJson);
+
+            // si expiró el token, refresco y reintento 1 vez
+            if (response.Contains("401") || response.Contains("Unauthorized"))
+            {
+                ToLog("401 en Vender → renovando token IOL y reintentando...");
+                LoginIOL();
+                response = GetResponsePOST(sURL + "/api/v2/operar/Vender", postDataJson);
+            }
+
+            try
+            {
+                dynamic json = JObject.Parse(response);
+                string okStr = json.ok != null ? json.ok.ToString() : "true";
+                if (okStr.Equals("false", StringComparison.OrdinalIgnoreCase))
+                {
+                    ToLog(response);
+                    return "Error";
+                }
+                string operacion = json.numeroOperacion;
+                return operacion ?? "Error";
+            }
+            catch
+            {
+                ToLog(response);
+                return "Error";
             }
         }
+
+        //private async Task<string> Comprar(string simbolo, string cantidad, string precio)
+        //{
+        //    if (int.Parse(cantidad)>0)
+        //    {
+        //        ToLog("Comprando " + cantidad + " " + simbolo + " a " + precio);
+        //        await Task.Run(() => Application.DoEvents());
+        //        string validez = DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "T17:59:59.000Z";
+        //        string postData = "mercado=bCBA&simbolo=" + simbolo + "&cantidad=" + cantidad + "&precio=" + precio + "&validez=" + validez + "&plazo=t0";
+        //        string response;
+        //        response = GetResponsePOST(sURL + "/api/v2/operar/Comprar", postData);
+        //        if (response.Contains("Error") || response.Contains("Se exced") || response.Contains("No se puede"))
+        //        {
+        //            ToLog(response);
+        //            return "Error";
+        //        }
+        //        else
+        //        {   try
+        //            {
+        //                dynamic json = JObject.Parse(response);
+        //                string operacion = json.numeroOperacion;
+        //                if (json.ok == "false")
+        //                {
+        //                    return "Error";
+        //                }
+        //                else
+        //                {
+        //                    return operacion;
+        //                }
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                ToLog(response);
+        //                return "Error";
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        ToLog("Error de cantidad: " + cantidad);
+        //        return "Error";
+        //    }
+        //}
+
+        //private string Vender(string simbolo, string cantidad, string precio)
+        //{
+        //    ToLog("Vendiendo " + cantidad + " " + simbolo + " a " + precio);
+        //    Application.DoEvents();
+        //    string validez = DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "T17:59:59.000Z";
+        //    string postData = "mercado=bCBA&simbolo=" + simbolo + "&cantidad=" + cantidad + "&precio=" + precio + "&validez=" + validez + "&plazo=t1";
+        //    string response;
+        //    response = GetResponsePOST(sURL + "/api/v2/operar/Vender", postData);
+        //    dynamic json = JObject.Parse(response);
+        //    string operacion = json.numeroOperacion;
+        //    if (json.ok == "false")
+        //    {
+        //        return "Error";
+        //    }
+        //    else
+        //    {
+        //        return operacion;
+        //    }
+        //}
 
         private async void refreshRatio(int i)
         {
@@ -840,8 +1000,9 @@ namespace BOTArbitradorPorPlazo
                     grdPanel.Rows[i].Cells[6].Style.ForeColor = Color.Red;
                 }
 
-                double limiteBonos = umbralBonos + double.Parse(cboUmbral.Text.Replace(".", ","));
-                double limiteAcciones = umbralAcciones + double.Parse(cboUmbral.Text.Replace(".", ","));
+                double umbralUI = (cboUmbral.SelectedItem is double d) ? d : 0d;
+                double limiteBonos = umbralBonos + umbralUI;
+                double limiteAcciones = umbralAcciones + umbralUI;
 
                 if (
                     (esBono && (porcentual > limiteBonos))
@@ -882,7 +1043,7 @@ namespace BOTArbitradorPorPlazo
                                 cant = Math.Floor(presupuesto / double.Parse(PIV)).ToString();
                             }
                         }
-                        if (int.Parse(DateTime.Now.ToString("HHmm")) >= 1105 && int.Parse(DateTime.Now.ToString("HHmm")) <= 1625)
+                        if (int.Parse(DateTime.Now.ToString("HHmm")) >= HorarioApertura && int.Parse(DateTime.Now.ToString("HHmm")) <= HorarioCierre)
                         {
                             Operar(simbolo, cant, PIV, P24C);
                         }
