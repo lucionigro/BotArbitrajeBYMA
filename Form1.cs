@@ -12,17 +12,15 @@ using System.Text;
 namespace BOTArbitradorPorPlazo
 {
     public partial class frmBOT : Form
-
     {
         const string sURL = "https://api.invertironline.com";
         const string SURLOper = "https://www.invertironline.com";
         const string sURLVETA = "https://api.veta.xoms.com.ar";
-        const string prefijoPrimary= "MERV - XMEV - ";
+        const string prefijoPrimary = "MERV - XMEV - ";
         const string sufijoCI = " - CI";
         const string sufijo24 = " - 24hs";
         const int HorarioApertura = 1035;
         const int HorarioCierre = 1655;
-
 
         string tokenVETA;
         string bearer;
@@ -42,28 +40,25 @@ namespace BOTArbitradorPorPlazo
         {
             InitializeComponent();
         }
-                                                                                   
+
         private void frmBOT_Load(object sender, EventArgs e)
         {
             this.Top = 10;
             this.Text = "BOT Arbitrador - Sion Capital";
-                        
+
             DoubleBuffered = true;
             CheckForIllegalCrossThreadCalls = false;
-            umbralAcciones = 0.50;  //Establecer los umbrales de acuerdo a la comisión de cada uno.
+            umbralAcciones = 0.50;  // Establecer los umbrales de acuerdo a la comisión de cada uno.
             umbralBonos = 0.50;
 
             tickersIOL = new List<string>();
             tickers = new List<Ticker>();
 
             FillTickersIOL();
-
             ConfigureGrid();
 
             for (double j = 0; j <= 4; j = j + 0.1)
-            {
                 cboUmbral.Items.Add(Math.Round(j, 2));
-            }
 
             var configuracion = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
@@ -78,21 +73,16 @@ namespace BOTArbitradorPorPlazo
                 txtUsuarioVETA.Text = configuracion.GetSection("MiConfiguracion:UserVETA").Value;
                 txtClaveVETA.Text = configuracion.GetSection("MiConfiguracion:ClaveVETA").Value;
             }
-            catch (Exception ex)
-            {
-
-            }
+            catch { }
 
             if (cboUmbral.Items.Count > 0 && cboUmbral.SelectedIndex < 0)
                 cboUmbral.SelectedIndex = 0;
         }
 
-
         private void FillTickersIOL()
         {
-            //ETFs
+            // ETFs
             tickersIOL.Add("-ETFs-");
-
             tickersIOL.Add("ARKK");
             tickersIOL.Add("DIA");
             tickersIOL.Add("EEM");
@@ -103,57 +93,27 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("XLE");
             tickersIOL.Add("XLF");
 
-            //Bonos
+            // Bonos
             tickersIOL.Add("-BONDs-");
-
-            //AddTicker("101675", "S29O1");
-
-            //tickersIOL.Add("S30N2");
             tickersIOL.Add("AL29");
-            //AddTicker("99934", "AL29D");
-            //AddTicker("99935", "AL29C");
-
-            //tickersIOL.Add("AL30");
-            //AddTicker("99926", "AL30D");
-            //AddTicker("99927", "AL30C");
-
             tickersIOL.Add("AL35");
-            //AddTicker("99928", "AL35D");
-            //AddTicker("99929", "AL35C");
-
             tickersIOL.Add("AE38");
-            //AddTicker("99930", "AE38D");
-            //AddTicker("99931", "AE38C");
-
             tickersIOL.Add("AL41");
-            //AddTicker("87456", "CO26");
-            //tickersIOL.Add("CUAP");
             tickersIOL.Add("DICP");
             tickersIOL.Add("PARP");
-
             tickersIOL.Add("GD29");
-            //AddTicker("99957", "GD29D");
-            //AddTicker("99956", "GD29C");
-
-            //tickersIOL.Add("GD30");
-            //AddTicker("99958", "GD30D");
-            //AddTicker("99963", "GD30C");
             tickersIOL.Add("GD35");
-            //AddTicker("99959", "GD35D");
-            //AddTicker("99965", "GD35C");
-
             tickersIOL.Add("GD38");
             tickersIOL.Add("GD41");
             tickersIOL.Add("GD46");
-
             tickersIOL.Add("PBA25");
             tickersIOL.Add("TX26");
             tickersIOL.Add("TX28");
             tickersIOL.Add("TO26");
             tickersIOL.Add("TDG24");
-            //Acciones
-            tickersIOL.Add("-ACCs-");
 
+            // Acciones
+            tickersIOL.Add("-ACCs-");
             tickersIOL.Add("ALUA");
             tickersIOL.Add("BBAR");
             tickersIOL.Add("BMA");
@@ -164,9 +124,8 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("TXAR");
             tickersIOL.Add("YPFD");
 
-            //CEDEARs nuevos
+            // CEDEARs nuevos
             tickersIOL.Add("-NCEDs-");
-
             tickersIOL.Add("AAL");
             tickersIOL.Add("AKO.B");
             tickersIOL.Add("COIN");
@@ -191,7 +150,7 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("PSX");
             tickersIOL.Add("SHOP");
             tickersIOL.Add("SNOW");
-            tickersIOL.Add("SPOT");                                     
+            tickersIOL.Add("SPOT");
             tickersIOL.Add("SQ");
             tickersIOL.Add("UNH");
             tickersIOL.Add("UNP");
@@ -199,7 +158,6 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("ZM");
 
             tickersIOL.Add("-NCEDs2-");
-
             tickersIOL.Add("ABNB");
             tickersIOL.Add("BITF");
             tickersIOL.Add("F");
@@ -217,8 +175,6 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("UPST");
 
             tickersIOL.Add("-NCEDs3-");
-
-            //tickersIOL.Add("ACN");
             tickersIOL.Add("CCL");
             tickersIOL.Add("BKNG");
             tickersIOL.Add("CVS");
@@ -236,9 +192,8 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("SWKS");
             tickersIOL.Add("TMUS");
 
-            //CEDEARs viejos
+            // CEDEARs viejos
             tickersIOL.Add("-OCEDs-");
-
             tickersIOL.Add("AAPL");
             tickersIOL.Add("ABEV");
             tickersIOL.Add("ABT");
@@ -247,7 +202,7 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("AIG");
             tickersIOL.Add("AMD");
             tickersIOL.Add("AMGN");
-            tickersIOL.Add("AMX"); ;
+            tickersIOL.Add("AMX");
             tickersIOL.Add("AMZN");
             tickersIOL.Add("ARCO");
             tickersIOL.Add("AXP");
@@ -315,7 +270,6 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("NKE");
             tickersIOL.Add("NOKA");
             tickersIOL.Add("NVDA");
-            //AddTicker("87319", "OGZD");
             tickersIOL.Add("ORAN");
             tickersIOL.Add("ORCL");
             tickersIOL.Add("PBR");
@@ -353,32 +307,21 @@ namespace BOTArbitradorPorPlazo
             tickersIOL.Add("X");
             tickersIOL.Add("XOM");
 
-            //Galpones
+            // Galpones
             tickersIOL.Add("-GALPs-");
-
-            //tickersIOL.Add("AUSO");
-            //AddTicker("302", "BHIP");
-            //tickersIOL.Add("BOLT");
             tickersIOL.Add("CEPU");
             tickersIOL.Add("COME");
             tickersIOL.Add("CRES");
             tickersIOL.Add("CTIO");
-            //tickersIOL.Add("CVH");
             tickersIOL.Add("EDN");
             tickersIOL.Add("GAMI");
-            //tickersIOL.Add("GCDI");
-            //tickersIOL.Add("HARG");
             tickersIOL.Add("LOMA");
             tickersIOL.Add("MIRG");
-            //tickersIOL.Add("OEST");
-            //tickersIOL.Add("SAMI");
             tickersIOL.Add("TECO2");
             tickersIOL.Add("TGNO4");
             tickersIOL.Add("TGSU2");
             tickersIOL.Add("TRAN");
             tickersIOL.Add("VALO");
-            /*
-            */
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
@@ -394,8 +337,7 @@ namespace BOTArbitradorPorPlazo
 
             var allInstruments = await api.GetAllInstruments();
 
-            //var entries = new[] { Entry.Last, Entry.Bids, Entry.Offers };
-            var entries = new[] {Entry.Bids, Entry.Offers };
+            var entries = new[] { Entry.Bids, Entry.Offers };
 
             FillListaTickers();
 
@@ -406,103 +348,125 @@ namespace BOTArbitradorPorPlazo
             socket.OnData = OnMarketData;
             var socketTask = await socket.Start();
             socketTask.Wait(1000);
+
             LoginIOL();
             tmr.Start();
             ToLog("Login IOL Ok");
             await socketTask;
-
         }
+
+        // ====== HTTP HELPERS (UTF-8 + Content-Type correcto) ======
+        private string PostForm(string url, string formBody) // /token
+        {
+            var req = (HttpWebRequest)WebRequest.Create(url);
+            byte[] data = Encoding.UTF8.GetBytes(formBody);
+            req.Method = "POST";
+            req.ContentType = "application/x-www-form-urlencoded";
+            req.ContentLength = data.Length;
+            if (!string.IsNullOrEmpty(bearer)) req.Headers["Authorization"] = bearer;
+
+            using (var s = req.GetRequestStream()) s.Write(data, 0, data.Length);
+
+            try
+            {
+                using var resp = (HttpWebResponse)req.GetResponse();
+                using var sr = new StreamReader(resp.GetResponseStream(), Encoding.UTF8);
+                return sr.ReadToEnd();
+            }
+            catch (WebException ex)
+            {
+                var er = ex.Response as HttpWebResponse;
+                using var sr = new StreamReader(er?.GetResponseStream() ?? Stream.Null, Encoding.UTF8);
+                return $"HTTP {(int)(er?.StatusCode ?? 0)} {er?.StatusCode}: {sr.ReadToEnd()}";
+            }
+        }
+
+        private string PostJson(string url, string jsonBody) // /api/v2/operar/*
+        {
+            var req = (HttpWebRequest)WebRequest.Create(url);
+            byte[] data = Encoding.UTF8.GetBytes(jsonBody);
+            req.Method = "POST";
+            req.ContentType = "application/json";
+            req.ContentLength = data.Length;
+            if (!string.IsNullOrEmpty(bearer)) req.Headers["Authorization"] = bearer;
+
+            using (var s = req.GetRequestStream()) s.Write(data, 0, data.Length);
+
+            try
+            {
+                using var resp = (HttpWebResponse)req.GetResponse();
+                using var sr = new StreamReader(resp.GetResponseStream(), Encoding.UTF8);
+                return sr.ReadToEnd();
+            }
+            catch (WebException ex)
+            {
+                var er = ex.Response as HttpWebResponse;
+                using var sr = new StreamReader(er?.GetResponseStream() ?? Stream.Null, Encoding.UTF8);
+                return $"HTTP {(int)(er?.StatusCode ?? 0)} {er?.StatusCode}: {sr.ReadToEnd()}";
+            }
+        }
+
+        private string GetJson(string url) // GET con bearer
+        {
+            var req = (HttpWebRequest)WebRequest.Create(url);
+            req.Method = "GET";
+            req.ContentType = "application/json";
+            if (!string.IsNullOrEmpty(bearer)) req.Headers["Authorization"] = bearer;
+
+            try
+            {
+                using var resp = (HttpWebResponse)req.GetResponse();
+                using var sr = new StreamReader(resp.GetResponseStream(), Encoding.UTF8);
+                return sr.ReadToEnd();
+            }
+            catch (WebException ex)
+            {
+                var er = ex.Response as HttpWebResponse;
+                using var sr = new StreamReader(er?.GetResponseStream() ?? Stream.Null, Encoding.UTF8);
+                return $"HTTP {(int)(er?.StatusCode ?? 0)} {er?.StatusCode}: {sr.ReadToEnd()}";
+            }
+        }
+        // ==========================================================
 
         private async void LoginIOL()
         {
             try
             {
+                // Login inicial
                 if (expires == DateTime.MinValue)
                 {
-                    string postData = "username=" + txtUsuarioIOL.Text + "&password=" + txtClaveIOL.Text + "&grant_type=password";
-                    string response;
-                    response = GetResponsePOST(sURL + "/token", postData);
+                    string postData = $"username={txtUsuarioIOL.Text}&password={txtClaveIOL.Text}&grant_type=password";
+                    string response = PostForm(sURL + "/token", postData);
                     dynamic json = JObject.Parse(response);
                     bearer = "Bearer " + json.access_token;
                     expires = DateTime.Now.AddSeconds((double)json.expires_in - 300);
-                    refresh = json.refresh_token;                           
-                    ToLog(bearer);
+                    refresh = json.refresh_token;
+                    ToLog("Token IOL OK");
                 }
-                else
+                // Refresh si está por vencer o vencido
+                else if (DateTime.Now >= expires)
                 {
-                    if (DateTime.Now >= expires)
+                    string postData = $"refresh_token={refresh}&grant_type=refresh_token";
+                    string response = PostForm(sURL + "/token", postData);
+                    if (response.StartsWith("HTTP 401"))
                     {
-                        string postData = "refresh_token=" + refresh + "&grant_type=refresh_token";
-                        string response;
-                        response = GetResponsePOST(sURL + "/token", postData);
-                        if (response.Contains("Error") || response.Contains("excedi"))
-                        {
-                            ToLog(response);
-                        }
-                        else
-                        {
-                            dynamic json = JObject.Parse(response);
-                            bearer = "Bearer " + json.access_token;
-                            expires = DateTime.Now.AddSeconds((double)json.expires_in - 100);
-                            refresh = json.refresh_token;
-                            ToLog(bearer);
-                        }
+                        ToLog("Refresh 401: " + response);
+                    }
+                    else
+                    {
+                        dynamic json = JObject.Parse(response);
+                        bearer = "Bearer " + json.access_token;
+                        expires = DateTime.Now.AddSeconds((double)json.expires_in - 100);
+                        refresh = json.refresh_token;
+                        ToLog("Token IOL Refrescado");
                     }
                 }
             }
             catch (Exception e)
             {
-                ToLog(e.Message);
-            }
-
-        }
-        private string GetResponseGET(string sURL, string sHeader)
-        {
-            WebRequest request = WebRequest.Create(sURL);
-            request.Timeout = 10000;
-            request.Method = "GET";
-            request.ContentType = "application/json";
-            request.Headers.Add("Authorization", sHeader);
-
-            try
-            {
-                WebResponse response = request.GetResponse();
-                return new StreamReader(response.GetResponseStream()).ReadToEnd();
-            }
-            catch (Exception e)
-            {
-                return e.Message;
+                ToLog("LoginIOL error: " + e.Message);
             }
         }
-
-        private string GetResponsePOST(string sURL, string sData)
-        {
-            WebRequest request = WebRequest.Create(sURL);
-            var data = Encoding.ASCII.GetBytes(sData);
-            request.Timeout = 10000;
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = sData.Length;
-
-            if (bearer != null)
-            {
-                request.Headers.Add("Authorization", bearer);
-            }
-            try
-            {
-                using (var stream = request.GetRequestStream())
-                {
-                    stream.Write(data, 0, data.Length);
-                }
-                WebResponse response = request.GetResponse();
-                return new StreamReader(response.GetResponseStream()).ReadToEnd();
-            }
-            catch (Exception e)
-            {
-                return e.Message;
-            }
-        }
-
 
         private async Task<string> Comprar(string simbolo, string cantidad, string precio)
         {
@@ -533,16 +497,13 @@ namespace BOTArbitradorPorPlazo
             };
 
             string postDataJson = JsonConvert.SerializeObject(order);
+            string response = PostJson(sURL + "/api/v2/operar/Comprar", postDataJson);
 
-            // intento 1
-            string response = GetResponsePOST(sURL + "/api/v2/operar/Comprar", postDataJson);
-
-            // si expiró el token, refresco y reintento 1 vez
-            if (response.Contains("401") || response.Contains("Unauthorized"))
+            if (response.StartsWith("HTTP 401"))
             {
                 ToLog("401 en Comprar → renovando token IOL y reintentando...");
                 LoginIOL();
-                response = GetResponsePOST(sURL + "/api/v2/operar/Comprar", postDataJson);
+                response = PostJson(sURL + "/api/v2/operar/Comprar", postDataJson);
             }
 
             try
@@ -551,7 +512,7 @@ namespace BOTArbitradorPorPlazo
                 string okStr = json.ok != null ? json.ok.ToString() : "true";
                 if (okStr.Equals("false", StringComparison.OrdinalIgnoreCase))
                 {
-                    ToLog(response);
+                    ToLog("Comprar NOK: " + response);
                     return "Error";
                 }
                 string operacion = json.numeroOperacion;
@@ -559,261 +520,10 @@ namespace BOTArbitradorPorPlazo
             }
             catch
             {
-                ToLog(response);
+                ToLog("Comprar parse error: " + response);
                 return "Error";
             }
         }
-
-
-        private void FillListaTickers()
-        {
-            foreach (string tickerIOL in tickersIOL)
-            {
-                tickers.Add(new Ticker(tickerIOL, prefijoPrimary + tickerIOL + sufijoCI, prefijoPrimary + tickerIOL + sufijo24));
-                tickersCI = tickers.Select(t => t.PrimaryCI).ToList();
-                tickers24 = tickers.Select(t => t.Primary24).ToList();
-            }
-        }
-
-        private async void OnMarketData(Api api, MarketData marketData)
-        {
-            //var ticker = marketData.Instrument.Symbol;
-            var ticker = marketData.InstrumentId.Symbol;
-            var bid = default(decimal);
-            var offer = default(decimal);
-            var bidSize = default(decimal);
-            var offerSize = default(decimal);
-
-            if (marketData.Data.Bids != null)
-            {
-                foreach (var trade in marketData.Data.Bids)
-                {
-                    bid = trade.Price;
-                    bidSize = trade.Size;
-                }
-            }
-
-            if (marketData.Data.Offers != null)
-            {
-                foreach (var trade in marketData.Data.Offers)
-                {
-                    offer = trade.Price;
-                    offerSize = trade.Size;
-                }
-            }
-            DateTime dt = DateTimeOffset.FromUnixTimeMilliseconds(marketData.Timestamp).DateTime;
-
-            if (ticker.EndsWith("24hs"))
-            {
-                for (int j = 0; j < grdPanel.Rows.Count; j++)
-                {
-                    string left = grdPanel.Rows[j].Cells[0].Value.ToString();
-                    string right = tickers.Where(t => t.Primary24 == ticker).Select(t => t.IOL).First().ToString();
-                    if (left == right)
-                    {
-                        if (bidSize == 0)
-                        {
-                            grdPanel.Rows[j].Cells[4].Value = "";
-                            grdPanel.Rows[j].Cells[5].Value = "";
-                        }
-                        else
-                        {
-                            grdPanel.Rows[j].Cells[4].Value = bid;
-                            grdPanel.Rows[j].Cells[5].Value = bidSize;
-                        }
-                        refreshRatio(j);
-                    }
-                }
-            }
-            if (ticker.EndsWith("CI"))
-            {
-                for (int j = 0; j < grdPanel.Rows.Count; j++)
-                {
-                    string left = grdPanel.Rows[j].Cells[0].Value.ToString();
-                    string right = tickers.Where(t => t.PrimaryCI == ticker).Select(t => t.IOL).First().ToString();
-
-                    //if (grdPanel.Rows[j].Cells[0].Value.ToString() == tickers.Where(t => t.PrimaryCI == ticker).Select(t => t.IOL).First().ToString()) ;
-                    if (left == right)
-                    {
-                        //ToLog("primero " + grdPanel.Rows[j].Cells[0].Value.ToString() + " segundo " + tickers.Where(t => t.PrimaryCI == ticker).Select(t => t.IOL).First().ToString());
-                        if (offerSize == 0)
-                        {
-                            grdPanel.Rows[j].Cells[2].Value = "";
-                            grdPanel.Rows[j].Cells[3].Value = "";
-                        }
-                        else
-                        {
-                            grdPanel.Rows[j].Cells[2].Value = offerSize;
-                            grdPanel.Rows[j].Cells[3].Value = offer;
-                        }
-                        refreshRatio(j);
-                    }
-                }
-            }
-            Application.DoEvents();
-        }
-
-        private void ConfigureGrid()
-        {
-            grdPanel.Columns.Clear();
-            grdPanel.Rows.Clear();
-            grdPanel.Columns.Add("Ticker", "Ticker");
-            grdPanel.Columns[0].Width = 70;
-            grdPanel.Columns[0].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            grdPanel.Columns.Add("Momento", "Momento");
-            grdPanel.Columns[1].Width = 70;
-            grdPanel.Columns[1].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            grdPanel.Columns.Add("QVCI", "QVCI");
-            grdPanel.Columns[2].Width = 70;
-            grdPanel.Columns[2].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
-            grdPanel.Columns.Add("PVCI", "PVCI");
-            grdPanel.Columns[3].Width = 70;
-            grdPanel.Columns[3].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
-            grdPanel.Columns.Add("PC24", "PC24");
-            grdPanel.Columns[4].Width = 70;
-            grdPanel.Columns[4].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
-
-            grdPanel.Columns.Add("QC24", "QC24");
-            grdPanel.Columns[5].Width = 70;
-            grdPanel.Columns[5].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
-
-            grdPanel.Columns.Add("Ratio", "Ratio");
-            grdPanel.Columns[6].Width = 70;
-            grdPanel.Columns[6].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
-            
-            grdPanel.RowHeadersWidth = 4;
-            
-            foreach (var ticker in tickersIOL)
-            {
-                grdPanel.Rows.Add(ticker);
-            }
-
-        }
-
-        private async void ToLog(string s)
-        {
-            lbLog.Items.Add(DateTime.Now.ToLongTimeString() + ": " + s);
-            lbLog.SelectedIndex = lbLog.Items.Count - 1;
-        }
-
-        private async void tmr_Tick(object sender, EventArgs e)
-        {
-            if (txtUsuarioIOL.Text != string.Empty && txtClaveIOL.Text != string.Empty)
-            {
-                LoginIOL();
-            }
-
-        }
-
-
-        private async void Operar(string simbolo, string q, string PC, string PV)
-            {
-            int cifrasRedondeo = 0;
-            LoginIOL();
-            ToLog("Iniciando " + simbolo);
-
-            double preventivoCompra = double.Parse(PC);
-            if (preventivoCompra < 100)
-            {
-                cifrasRedondeo = 1;
-            }
-            preventivoCompra = Math.Round(preventivoCompra + ((preventivoCompra / 100) * 0.1), cifrasRedondeo);
-            PC = preventivoCompra.ToString().Replace(",", ".");
-
-            double preventivoVenta = double.Parse(PV);
-            preventivoVenta = Math.Round(preventivoVenta - ((preventivoVenta / 100) * 0.1), cifrasRedondeo);
-            PV = preventivoVenta.ToString().Replace(",", ".");
-
-            string operacionCompra = await Comprar(simbolo, q, PC);
-            if (operacionCompra != "Error")
-            {
-                string estadooperacion = "";
-                int intentos = 24;
-
-                for (int i = 1; i <= intentos; i++)
-                {
-                    ToLog("Intento de compra " + i.ToString() + " de " + simbolo);
-                    estadooperacion = GetEstadoOperacion(operacionCompra);
-                    if (estadooperacion == "terminada")
-                    {
-                        break;
-                    }
-                    Application.DoEvents();
-                }
-                if (estadooperacion == "terminada")
-                {
-                    ToLog("Compra OK " + simbolo);
-                    Vender(simbolo, q, PV);
-                }
-                else
-                {
-                    ToLog("Venció la compra de " + simbolo);
-                    WebRequest request = WebRequest.Create(sURL + "/api/v2/operaciones/" + operacionCompra);
-                    request.Method = "DELETE";
-                    request.ContentType = "application/json";
-                    request.Headers.Add("Authorization", bearer);
-
-                    try
-                    {
-                        WebResponse response = request.GetResponse();
-                    }
-                    catch (Exception e)
-                    {
-                        ToLog(e.Message);
-                    }
-                }
-            }
-            else
-            {
-                ToLog("Error en compra de " + simbolo);
-            }
-        }
-        private string GetEstadoOperacion(string idoperacion)
-        {
-            string url = sURL + "/api/v2/operaciones/" + idoperacion;
-
-            string response = GetResponseGET(url, bearer);
-
-            // Si expiró el token, refresco y reintento 1 vez
-            if (EsUnauthorized(response))
-            {
-                ToLog("401 en GetEstadoOperacion → renovando token IOL y reintentando...");
-                LoginIOL();
-                response = GetResponseGET(url, bearer);
-            }
-
-            try
-            {
-                dynamic json = JObject.Parse(response);
-
-                // Algunos responses traen "estadoActual", otros "estado"
-                string estado =
-                    (string)(json.estadoActual != null ? json.estadoActual :
-                             json.estado != null ? json.estado :
-                             "");
-
-                if (string.IsNullOrWhiteSpace(estado))
-                    return "Error";
-
-                return estado.Trim().ToLowerInvariant(); // ej: "terminada", "pendiente", etc.
-            }
-            catch
-            {
-                // Mensajes de error comunes sin JSON válido
-                if (response.IndexOf("404", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    response.IndexOf("no existe", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return "noencontrada";
-                }
-
-                ToLog(response);
-                return "Error";
-            }
-        }
-
-        private bool EsUnauthorized(string s) =>
-            !string.IsNullOrEmpty(s) &&
-            (s.Contains("401") || s.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0);
 
         private string Vender(string simbolo, string cantidad, string precio)
         {
@@ -844,16 +554,13 @@ namespace BOTArbitradorPorPlazo
             };
 
             string postDataJson = JsonConvert.SerializeObject(order);
+            string response = PostJson(sURL + "/api/v2/operar/Vender", postDataJson);
 
-            // intento 1
-            string response = GetResponsePOST(sURL + "/api/v2/operar/Vender", postDataJson);
-
-            // si expiró el token, refresco y reintento 1 vez
-            if (response.Contains("401") || response.Contains("Unauthorized"))
+            if (response.StartsWith("HTTP 401"))
             {
                 ToLog("401 en Vender → renovando token IOL y reintentando...");
                 LoginIOL();
-                response = GetResponsePOST(sURL + "/api/v2/operar/Vender", postDataJson);
+                response = PostJson(sURL + "/api/v2/operar/Vender", postDataJson);
             }
 
             try
@@ -862,7 +569,7 @@ namespace BOTArbitradorPorPlazo
                 string okStr = json.ok != null ? json.ok.ToString() : "true";
                 if (okStr.Equals("false", StringComparison.OrdinalIgnoreCase))
                 {
-                    ToLog(response);
+                    ToLog("Vender NOK: " + response);
                     return "Error";
                 }
                 string operacion = json.numeroOperacion;
@@ -870,199 +577,352 @@ namespace BOTArbitradorPorPlazo
             }
             catch
             {
-                ToLog(response);
+                ToLog("Vender parse error: " + response);
                 return "Error";
             }
         }
 
-        //private async Task<string> Comprar(string simbolo, string cantidad, string precio)
-        //{
-        //    if (int.Parse(cantidad)>0)
-        //    {
-        //        ToLog("Comprando " + cantidad + " " + simbolo + " a " + precio);
-        //        await Task.Run(() => Application.DoEvents());
-        //        string validez = DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "T17:59:59.000Z";
-        //        string postData = "mercado=bCBA&simbolo=" + simbolo + "&cantidad=" + cantidad + "&precio=" + precio + "&validez=" + validez + "&plazo=t0";
-        //        string response;
-        //        response = GetResponsePOST(sURL + "/api/v2/operar/Comprar", postData);
-        //        if (response.Contains("Error") || response.Contains("Se exced") || response.Contains("No se puede"))
-        //        {
-        //            ToLog(response);
-        //            return "Error";
-        //        }
-        //        else
-        //        {   try
-        //            {
-        //                dynamic json = JObject.Parse(response);
-        //                string operacion = json.numeroOperacion;
-        //                if (json.ok == "false")
-        //                {
-        //                    return "Error";
-        //                }
-        //                else
-        //                {
-        //                    return operacion;
-        //                }
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                ToLog(response);
-        //                return "Error";
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        ToLog("Error de cantidad: " + cantidad);
-        //        return "Error";
-        //    }
-        //}
+        private string GetEstadoOperacion(string idoperacion)
+        {
+            string url = sURL + "/api/v2/operaciones/" + idoperacion;
+            string response = GetJson(url);
 
-        //private string Vender(string simbolo, string cantidad, string precio)
-        //{
-        //    ToLog("Vendiendo " + cantidad + " " + simbolo + " a " + precio);
-        //    Application.DoEvents();
-        //    string validez = DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "T17:59:59.000Z";
-        //    string postData = "mercado=bCBA&simbolo=" + simbolo + "&cantidad=" + cantidad + "&precio=" + precio + "&validez=" + validez + "&plazo=t1";
-        //    string response;
-        //    response = GetResponsePOST(sURL + "/api/v2/operar/Vender", postData);
-        //    dynamic json = JObject.Parse(response);
-        //    string operacion = json.numeroOperacion;
-        //    if (json.ok == "false")
-        //    {
-        //        return "Error";
-        //    }
-        //    else
-        //    {
-        //        return operacion;
-        //    }
-        //}
+            if (response.StartsWith("HTTP 401"))
+            {
+                ToLog("401 en GetEstadoOperacion → renovando token IOL y reintentando...");
+                LoginIOL();
+                response = GetJson(url);
+            }
+
+            try
+            {
+                dynamic json = JObject.Parse(response);
+                string estado =
+                    (string)(json.estadoActual != null ? json.estadoActual :
+                             json.estado != null ? json.estado : "");
+
+                if (string.IsNullOrWhiteSpace(estado))
+                    return "Error";
+
+                return estado.Trim().ToLowerInvariant(); // "terminada", "pendiente", etc.
+            }
+            catch
+            {
+                if (response.IndexOf("HTTP 404", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    response.IndexOf("no existe", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return "noencontrada";
+                }
+                ToLog("Estado parse error: " + response);
+                return "Error";
+            }
+        }
+
+        private void FillListaTickers()
+        {
+            foreach (string tickerIOL in tickersIOL)
+            {
+                tickers.Add(new Ticker(tickerIOL, prefijoPrimary + tickerIOL + sufijoCI, prefijoPrimary + tickerIOL + sufijo24));
+                tickersCI = tickers.Select(t => t.PrimaryCI).ToList();
+                tickers24 = tickers.Select(t => t.Primary24).ToList();
+            }
+        }
+
+        private async void OnMarketData(Api api, MarketData marketData)
+        {
+            var ticker = marketData.InstrumentId.Symbol;
+            var bid = default(decimal);
+            var offer = default(decimal);
+            var bidSize = default(decimal);
+            var offerSize = default(decimal);
+
+            if (marketData.Data.Bids != null)
+            {
+                foreach (var trade in marketData.Data.Bids)
+                {
+                    bid = trade.Price;
+                    bidSize = trade.Size;
+                }
+            }
+
+            if (marketData.Data.Offers != null)
+            {
+                foreach (var trade in marketData.Data.Offers)
+                {
+                    offer = trade.Price;
+                    offerSize = trade.Size;
+                }
+            }
+
+            if (ticker.EndsWith("24hs"))
+            {
+                for (int j = 0; j < grdPanel.Rows.Count; j++)
+                {
+                    string left = grdPanel.Rows[j].Cells[0].Value.ToString();
+                    string right = tickers.Where(t => t.Primary24 == ticker).Select(t => t.IOL).First().ToString();
+                    if (left == right)
+                    {
+                        if (bidSize == 0)
+                        {
+                            grdPanel.Rows[j].Cells[4].Value = "";
+                            grdPanel.Rows[j].Cells[5].Value = "";
+                        }
+                        else
+                        {
+                            grdPanel.Rows[j].Cells[4].Value = bid;
+                            grdPanel.Rows[j].Cells[5].Value = bidSize;
+                        }
+                        refreshRatio(j);
+                    }
+                }
+            }
+            if (ticker.EndsWith("CI"))
+            {
+                for (int j = 0; j < grdPanel.Rows.Count; j++)
+                {
+                    string left = grdPanel.Rows[j].Cells[0].Value.ToString();
+                    string right = tickers.Where(t => t.PrimaryCI == ticker).Select(t => t.IOL).First().ToString();
+
+                    if (left == right)
+                    {
+                        if (offerSize == 0)
+                        {
+                            grdPanel.Rows[j].Cells[2].Value = "";
+                            grdPanel.Rows[j].Cells[3].Value = "";
+                        }
+                        else
+                        {
+                            grdPanel.Rows[j].Cells[2].Value = offerSize;
+                            grdPanel.Rows[j].Cells[3].Value = offer;
+                        }
+                        refreshRatio(j);
+                    }
+                }
+            }
+            Application.DoEvents();
+        }
+
+        private void ConfigureGrid()
+        {
+            grdPanel.Columns.Clear();
+            grdPanel.Rows.Clear();
+            grdPanel.Columns.Add("Ticker", "Ticker");
+            grdPanel.Columns[0].Width = 70;
+            grdPanel.Columns[0].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            grdPanel.Columns.Add("Momento", "Momento");
+            grdPanel.Columns[1].Width = 70;
+            grdPanel.Columns[1].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            grdPanel.Columns.Add("QVCI", "QVCI");
+            grdPanel.Columns[2].Width = 70;
+            grdPanel.Columns[2].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            grdPanel.Columns.Add("PVCI", "PVCI");
+            grdPanel.Columns[3].Width = 70;
+            grdPanel.Columns[3].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            grdPanel.Columns.Add("PC24", "PC24");
+            grdPanel.Columns[4].Width = 70;
+            grdPanel.Columns[4].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            grdPanel.Columns.Add("QC24", "QC24");
+            grdPanel.Columns[5].Width = 70;
+            grdPanel.Columns[5].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            grdPanel.Columns.Add("Ratio", "Ratio");
+            grdPanel.Columns[6].Width = 70;
+            grdPanel.Columns[6].CellTemplate.Style.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            grdPanel.RowHeadersWidth = 4;
+
+            foreach (var ticker in tickersIOL)
+                grdPanel.Rows.Add(ticker);
+        }
 
         private async void refreshRatio(int i)
         {
-            Boolean esBono = false;
+            bool esBono = false;
             string PIV = "";
             string P24C = "";
             string QIV = "";
             string Q24C = "";
             int Q;
-            string simbolo = grdPanel.Rows[i].Cells[0].Value.ToString();
+
+            string simbolo = grdPanel.Rows[i].Cells[0].Value?.ToString() ?? "";
             grdPanel.ClearSelection();
             grdPanel.Rows[i].Cells[1].Value = DateTime.Now.ToLongTimeString();
+
             if (chkFollow.Checked)
-            {
                 grdPanel.CurrentCell = grdPanel.Rows[i].Cells[1];
-            }
+
             grdPanel.Rows[i].Selected = true;
             Application.DoEvents();
+
             if (grdPanel.Rows[i].Cells[3].Value != null)
             {
                 PIV = grdPanel.Rows[i].Cells[3].Value.ToString();
-                QIV = grdPanel.Rows[i].Cells[2].Value.ToString();
+                QIV = grdPanel.Rows[i].Cells[2].Value?.ToString() ?? "";
             }
             if (grdPanel.Rows[i].Cells[4].Value != null)
             {
                 P24C = grdPanel.Rows[i].Cells[4].Value.ToString();
-                Q24C = grdPanel.Rows[i].Cells[5].Value.ToString();
+                Q24C = grdPanel.Rows[i].Cells[5].Value?.ToString() ?? "";
             }
-            if (PIV == "" || P24C == "")
+
+            if (string.IsNullOrWhiteSpace(PIV) || string.IsNullOrWhiteSpace(P24C))
             {
                 grdPanel.Rows[i].Cells[6].Value = "";
+                return;
             }
-            else if (PIV != "" && P24C != "")
+
+            // Marcar si es bono
+            if (simbolo == "AL30" || simbolo == "AL29" || simbolo == "AL35" || simbolo == "AE38" ||
+                simbolo == "AL41" || simbolo == "TC23" || simbolo == "TC24" || simbolo == "CO26" ||
+                simbolo == "CUAP" || simbolo == "DICP" || simbolo == "GD29" || simbolo == "GD30" ||
+                simbolo == "GD35" || simbolo == "GD38" || simbolo == "GD41" || simbolo == "GD46" ||
+                simbolo == "PARP" || simbolo == "PR13" || simbolo == "PR15" || simbolo == "TO23" ||
+                simbolo == "TO26" || simbolo == "T2X2" || simbolo == "T2X3" || simbolo == "T2X4" ||
+                simbolo == "TX22" || simbolo == "TX23" || simbolo == "TX24" || simbolo == "TX26" ||
+                simbolo == "TX28" || simbolo == "TDJ23" || simbolo == "TDL23" || simbolo == "TDS23" ||
+                simbolo == "TDF24")
             {
-                if (simbolo == "AL30" || simbolo == "AL29" || simbolo == "AL35" || simbolo == "AE38" ||
-                    simbolo == "AL41" || simbolo == "TC23" || simbolo == "TC24" || simbolo == "CO26" ||
-                    simbolo == "CUAP" || simbolo == "DICP" || simbolo == "GD29" || simbolo == "GD30" ||
-                    simbolo == "GD35" || simbolo == "GD38" || simbolo == "GD41" || simbolo == "GD46" ||
-                    simbolo == "PARP" || simbolo == "PR13" || simbolo == "PR15" || simbolo == "TO23" ||
-                    simbolo == "TO26" || simbolo == "T2X2" || simbolo == "T2X3" || simbolo == "T2X4" ||
-                    simbolo == "TX22" || simbolo == "TX23" || simbolo == "TX24" || simbolo == "TX26" ||
-                    simbolo == "TX28" || simbolo == "TDJ23" || simbolo == "TDL23" || simbolo == "TDS23" ||
-                    simbolo == "TDF24")
+                esBono = true;
+            }
+
+            double piv = Convert.ToDouble(PIV);
+            double p24 = Convert.ToDouble(P24C);
+
+            double porcentual = Math.Round(100 - ((piv / p24) * 100), 4);
+            grdPanel.Rows[i].Cells[6].Value = Math.Round(porcentual, 2);
+
+            grdPanel.Rows[i].Cells[6].Style.ForeColor = porcentual > 0 ? Color.DarkGreen : Color.Red;
+
+            double umbralUI = (cboUmbral.SelectedItem is double d) ? d : 0d;
+            double limiteBonos = umbralBonos + umbralUI;
+            double limiteAcciones = umbralAcciones + umbralUI;
+
+            bool superaUmbral = (esBono && (porcentual > limiteBonos)) || (!esBono && (porcentual > limiteAcciones));
+
+            if (!superaUmbral)
+                return;
+
+            if (chkBeep.Checked)
+                SystemSounds.Beep.Play();
+
+            grdPanel.Rows[i].Cells[6].Style.ForeColor = Color.DarkSlateBlue;
+            ToLog("Arbitraje en " + simbolo + " con ratio " + porcentual.ToString());
+
+            if (!chkAuto.Checked)
+                return;
+
+            // Calcular cantidad a operar
+            if (!int.TryParse(Q24C, out var q24)) q24 = 0;
+            if (!int.TryParse(QIV, out var qiv)) qiv = 0;
+
+            Q = (q24 > 0 && qiv > 0) ? Math.Min(q24, qiv) : 0;
+
+            double presupuesto = double.TryParse(txtPresupuesto.Text, out var p) ? p : 0;
+
+            string cant;
+            if (Q * piv < presupuesto)
+            {
+                cant = Q.ToString();
+            }
+            else
+            {
+                if (esBono)
+                    cant = Math.Floor(presupuesto * 100 / piv).ToString();
+                else
+                    cant = Math.Floor(presupuesto / piv).ToString();
+            }
+
+            // Ventana de mercado
+            int hhmm = int.Parse(DateTime.Now.ToString("HHmm"));
+            if (hhmm >= HorarioApertura && hhmm <= HorarioCierre)
+            {
+                Operar(simbolo, cant, PIV, P24C);
+            }
+
+            Application.DoEvents();
+        }
+
+        private async void ToLog(string s)
+        {
+            lbLog.Items.Add(DateTime.Now.ToLongTimeString() + ": " + s);
+            lbLog.SelectedIndex = lbLog.Items.Count - 1;
+        }
+
+        private async void tmr_Tick(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtUsuarioIOL.Text) || string.IsNullOrWhiteSpace(txtClaveIOL.Text))
+                return;
+
+            // Sólo refrescar si está por vencer o vencido
+            if (expires == DateTime.MinValue || DateTime.Now >= expires)
+                LoginIOL();
+        }
+
+        private async void Operar(string simbolo, string q, string PC, string PV)
+        {
+            int cifrasRedondeo = 0;
+            LoginIOL();
+            ToLog("Iniciando " + simbolo);
+
+            double preventivoCompra = double.Parse(PC);
+            if (preventivoCompra < 100) cifrasRedondeo = 1;
+            preventivoCompra = Math.Round(preventivoCompra + ((preventivoCompra / 100) * 0.1), cifrasRedondeo);
+            PC = preventivoCompra.ToString().Replace(",", ".");
+
+            double preventivoVenta = double.Parse(PV);
+            preventivoVenta = Math.Round(preventivoVenta - ((preventivoVenta / 100) * 0.1), cifrasRedondeo);
+            PV = preventivoVenta.ToString().Replace(",", ".");
+
+            string operacionCompra = await Comprar(simbolo, q, PC);
+            if (operacionCompra != "Error")
+            {
+                string estadooperacion = "";
+                int intentos = 24;
+
+                for (int i = 1; i <= intentos; i++)
                 {
-                    esBono = true;
+                    ToLog("Intento de compra " + i.ToString() + " de " + simbolo);
+                    estadooperacion = GetEstadoOperacion(operacionCompra);
+                    if (estadooperacion == "terminada")
+                        break;
+                    Application.DoEvents();
+                }
+                if (estadooperacion == "terminada")
+                {
+                    ToLog("Compra OK " + simbolo);
+                    Vender(simbolo, q, PV);
                 }
                 else
                 {
-                    esBono = false;
-                }
+                    ToLog("Venció la compra de " + simbolo);
+                    WebRequest request = WebRequest.Create(sURL + "/api/v2/operaciones/" + operacionCompra);
+                    request.Method = "DELETE";
+                    request.ContentType = "application/json";
+                    request.Headers.Add("Authorization", bearer);
 
-                double porcentual = Math.Round(100 - ((Convert.ToDouble(PIV) / Convert.ToDouble(P24C)) * 100), 4);
-                grdPanel.Rows[i].Cells[6].Value = Math.Round(porcentual,2);
-
-                if (porcentual > 0)
-                {
-                    grdPanel.Rows[i].Cells[6].Style.ForeColor = Color.DarkGreen;
-                }
-                else
-                {
-                    grdPanel.Rows[i].Cells[6].Style.ForeColor = Color.Red;
-                }
-
-                double umbralUI = (cboUmbral.SelectedItem is double d) ? d : 0d;
-                double limiteBonos = umbralBonos + umbralUI;
-                double limiteAcciones = umbralAcciones + umbralUI;
-
-                if (
-                    (esBono && (porcentual > limiteBonos))
-                    ||
-                    (!esBono && (porcentual > limiteAcciones))
-                   )
-                {
-                    if (chkBeep.Checked)
+                    try
                     {
-                        SystemSounds.Beep.Play();
+                        WebResponse response = request.GetResponse();
                     }
-                    grdPanel.Rows[i].Cells[6].Style.ForeColor = Color.DarkSlateBlue;
-                    ToLog("Arbitraje en " + simbolo + " con ratio " + porcentual.ToString());
-                    if (chkAuto.Checked)
+                    catch (Exception e)
                     {
-                        string cant;
-                        if (int.Parse(Q24C) < int.Parse(QIV))
-                        {
-                            Q = int.Parse(Q24C);
-                        }
-                        else
-                        {
-                            Q = int.Parse(QIV);
-                        }
-                        double presupuesto = double.Parse(txtPresupuesto.Text);
-                        if (Q * double.Parse(PIV) < presupuesto)
-                        {
-                            cant = Q.ToString();
-                        }
-                        else
-                        {
-                            if (esBono)
-                            {
-                                cant = Math.Floor(presupuesto * 100 / double.Parse(PIV)).ToString();
-                            }
-                            else
-                            {
-                                cant = Math.Floor(presupuesto / double.Parse(PIV)).ToString();
-                            }
-                        }
-                        if (int.Parse(DateTime.Now.ToString("HHmm")) >= HorarioApertura && int.Parse(DateTime.Now.ToString("HHmm")) <= HorarioCierre)
-                        {
-                            Operar(simbolo, cant, PIV, P24C);
-                        }
+                        ToLog(e.Message);
                     }
                 }
-                else
-                {
-                    //grdPanel.Rows[i].Cells[6].Style.ForeColor = Color.Red;
-                }
-                Application.DoEvents();
+            }
+            else
+            {
+                ToLog("Error en compra de " + simbolo);
             }
         }
 
-        private void grbLogin_Enter(object sender, EventArgs e)
-        {
-
-        }
+        private void grbLogin_Enter(object sender, EventArgs e) { }
     }
 
     record Ticker(string IOL, string PrimaryCI, string Primary24);
-    
 }
